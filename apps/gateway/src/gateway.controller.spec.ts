@@ -4,6 +4,7 @@ import { GatewayService } from './gateway.service';
 
 describe('GatewayController', () => {
   let gatewayController: GatewayController;
+  let gatewayService: GatewayService;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
@@ -12,11 +13,23 @@ describe('GatewayController', () => {
     }).compile();
 
     gatewayController = app.get<GatewayController>(GatewayController);
+    gatewayService = app.get<GatewayService>(GatewayService);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(gatewayController.getHello()).toBe('Hello World!');
+  describe('getHello', () => {
+    it('should return API information with endpoints', () => {
+      const result = gatewayController.getHello();
+      
+      expect(result).toHaveProperty('message');
+      expect(result).toHaveProperty('version');
+      expect(result).toHaveProperty('endpoints');
+      expect(result.message).toBe('Welcome to NestNextAuth API Gateway');
+      expect(result.version).toBe('1.0');
+      expect(result.endpoints).toHaveProperty('documentation');
+      expect(result.endpoints).toHaveProperty('auth');
+      expect(result.endpoints.auth).toHaveProperty('register');
+      expect(result.endpoints.auth).toHaveProperty('login');
+      expect(result.endpoints.auth).toHaveProperty('users');
     });
   });
 });
