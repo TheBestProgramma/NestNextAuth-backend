@@ -57,14 +57,34 @@ export class AuthController {
         this.authClient.send({ cmd: 'register' }, dto),
       );
       return result;
-    } catch (error) {
-      // Handle microservice errors
+    } catch (error: any) {
+      // Handle microservice errors - extract proper error message
       if (error instanceof HttpException) {
         throw error;
       }
+      
+      // Handle RpcException from microservices
+      if (error?.status && error?.message) {
+        throw new HttpException(
+          error.message,
+          error.status,
+        );
+      }
+      
+      // Handle error objects with response property
+      if (error?.response) {
+        const message = error.response.message || error.response.error || error.message;
+        const status = error.response.statusCode || error.status || HttpStatus.INTERNAL_SERVER_ERROR;
+        throw new HttpException(
+          message,
+          status,
+        );
+      }
+      
+      // Fallback for other error types
       throw new HttpException(
-        error.message || 'Registration failed',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        error?.message || 'Registration failed. Please try again.',
+        error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -103,14 +123,34 @@ export class AuthController {
         this.authClient.send({ cmd: 'login' }, dto),
       );
       return result;
-    } catch (error) {
-      // Handle microservice errors
+    } catch (error: any) {
+      // Handle microservice errors - extract proper error message
       if (error instanceof HttpException) {
         throw error;
       }
+      
+      // Handle RpcException from microservices
+      if (error?.status && error?.message) {
+        throw new HttpException(
+          error.message,
+          error.status,
+        );
+      }
+      
+      // Handle error objects with response property
+      if (error?.response) {
+        const message = error.response.message || error.response.error || error.message;
+        const status = error.response.statusCode || error.status || HttpStatus.UNAUTHORIZED;
+        throw new HttpException(
+          message,
+          status,
+        );
+      }
+      
+      // Fallback for other error types
       throw new HttpException(
-        error.message || 'Login failed',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        error?.message || 'Invalid email or password',
+        error?.status || HttpStatus.UNAUTHORIZED,
       );
     }
   }
