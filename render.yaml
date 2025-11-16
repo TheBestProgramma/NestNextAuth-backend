@@ -14,10 +14,7 @@ services:
       - key: MONGODB_URI
         sync: false  # IMPORTANT: Set this manually in Render dashboard (use MongoDB Atlas connection string)
       - key: AUTH_SERVICE_HOST
-        fromService:
-          type: worker
-          name: nestnextauth-authentication
-          property: host
+        value: nestnextauth-authentication  # Service name - Render will resolve this internally
       - key: AUTH_SERVICE_PORT
         value: 3001
       - key: JWT_SECRET
