@@ -1,15 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GatewayController } from './gateway.controller';
 import { GatewayService } from './gateway.service';
+import { LoggerService } from '@/core/logger';
 
 describe('GatewayController', () => {
   let gatewayController: GatewayController;
   let gatewayService: GatewayService;
 
+  const mockLoggerService = {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+  };
+
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [GatewayController],
-      providers: [GatewayService],
+      providers: [
+        GatewayService,
+        {
+          provide: LoggerService,
+          useValue: mockLoggerService,
+        },
+      ],
     }).compile();
 
     gatewayController = app.get<GatewayController>(GatewayController);

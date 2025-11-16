@@ -15,3 +15,6 @@ export * from './filters/http-exception.filter';
 // Utils
 export * from './utils/response.util';
 
+// Logger
+export * from './logger';
+

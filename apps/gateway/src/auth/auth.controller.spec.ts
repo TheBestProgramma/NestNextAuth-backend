@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { AuthController } from './auth.controller';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { LoggerService } from '@/core/logger';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -14,6 +15,14 @@ describe('AuthController', () => {
     send: jest.fn(),
   };
 
+  const mockLoggerService = {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -21,6 +30,10 @@ describe('AuthController', () => {
         {
           provide: 'AUTH_SERVICE',
           useValue: mockAuthClient,
+        },
+        {
+          provide: LoggerService,
+          useValue: mockLoggerService,
         },
       ],
     }).compile();

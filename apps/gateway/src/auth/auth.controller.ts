@@ -10,6 +10,7 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
+import { LoggerService } from '@/core/logger';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -18,6 +19,7 @@ import { LoginDto } from './dto/login.dto';
 export class AuthController {
   constructor(
     @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
+    private readonly logger: LoggerService,
   ) {}
 
   /**
@@ -52,19 +54,23 @@ export class AuthController {
     description: 'Validation error',
   })
   async register(@Body() dto: RegisterDto) {
+    this.logger.log(`Registration attempt for email: ${dto.email}`, 'AuthController');
     try {
       const result = await firstValueFrom(
         this.authClient.send({ cmd: 'register' }, dto),
       );
+      this.logger.log(`User registered successfully: ${dto.email}`, 'AuthController');
       return result;
     } catch (error: any) {
       // Handle microservice errors - extract proper error message
       if (error instanceof HttpException) {
+        this.logger.warn(`Registration failed: ${error.message}`, 'AuthController');
         throw error;
       }
       
       // Handle RpcException from microservices
       if (error?.status && error?.message) {
+        this.logger.warn(`Registration failed: ${error.message}`, 'AuthController');
         throw new HttpException(
           error.message,
           error.status,
@@ -75,6 +81,7 @@ export class AuthController {
       if (error?.response) {
         const message = error.response.message || error.response.error || error.message;
         const status = error.response.statusCode || error.status || HttpStatus.INTERNAL_SERVER_ERROR;
+        this.logger.error(`Registration error: ${message}`, 'AuthController', error.stack);
         throw new HttpException(
           message,
           status,
@@ -82,6 +89,7 @@ export class AuthController {
       }
       
       // Fallback for other error types
+      this.logger.error(`Registration failed: ${error?.message || 'Unknown error'}`, 'AuthController', error?.stack);
       throw new HttpException(
         error?.message || 'Registration failed. Please try again.',
         error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
@@ -118,19 +126,23 @@ export class AuthController {
     description: 'Invalid credentials',
   })
   async login(@Body() dto: LoginDto) {
+    this.logger.log(`Login attempt for email: ${dto.email}`, 'AuthController');
     try {
       const result = await firstValueFrom(
         this.authClient.send({ cmd: 'login' }, dto),
       );
+      this.logger.log(`User logged in successfully: ${dto.email}`, 'AuthController');
       return result;
     } catch (error: any) {
       // Handle microservice errors - extract proper error message
       if (error instanceof HttpException) {
+        this.logger.warn(`Login failed: ${error.message}`, 'AuthController');
         throw error;
       }
       
       // Handle RpcException from microservices
       if (error?.status && error?.message) {
+        this.logger.warn(`Login failed: ${error.message}`, 'AuthController');
         throw new HttpException(
           error.message,
           error.status,
@@ -141,6 +153,7 @@ export class AuthController {
       if (error?.response) {
         const message = error.response.message || error.response.error || error.message;
         const status = error.response.statusCode || error.status || HttpStatus.UNAUTHORIZED;
+        this.logger.warn(`Login error: ${message}`, 'AuthController');
         throw new HttpException(
           message,
           status,
@@ -148,6 +161,7 @@ export class AuthController {
       }
       
       // Fallback for other error types
+      this.logger.error(`Login failed: ${error?.message || 'Unknown error'}`, 'AuthController', error?.stack);
       throw new HttpException(
         error?.message || 'Invalid email or password',
         error?.status || HttpStatus.UNAUTHORIZED,
@@ -180,19 +194,23 @@ export class AuthController {
     },
   })
   async getUsers() {
+    this.logger.log('Fetching all users', 'AuthController');
     try {
       const result = await firstValueFrom(
         this.authClient.send({ cmd: 'get_users' }, {}),
       );
+      this.logger.log(`Fetched ${Array.isArray(result) ? result.length : 0} users`, 'AuthController');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       // Handle microservice errors
       if (error instanceof HttpException) {
+        this.logger.error(`Failed to fetch users: ${error.message}`, 'AuthController');
         throw error;
       }
+      this.logger.error(`Failed to fetch users: ${error?.message || 'Unknown error'}`, 'AuthController', error?.stack);
       throw new HttpException(
-        error.message || 'Failed to fetch users',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        error?.message || 'Failed to fetch users',
+        error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

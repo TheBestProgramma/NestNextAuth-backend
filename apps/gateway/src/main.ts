@@ -1,15 +1,33 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { LoggerService } from '@/core/logger';
 import { GatewayModule } from './gateway.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(GatewayModule);
+  
+  // Get logger instance
+  const logger = app.get(LoggerService);
 
   // Enable CORS
+  let allowedOrigins: string[] | boolean = true; // Default: allow all in development
+  
+  if (process.env.ALLOWED_ORIGINS) {
+    if (process.env.ALLOWED_ORIGINS === '*') {
+      allowedOrigins = true; // Allow all origins
+    } else {
+      allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
+    }
+  } else if (process.env.NODE_ENV === 'production') {
+    allowedOrigins = []; // Must be explicitly set in production
+  }
+
   app.enableCors({
-    origin: true,
+    origin: allowedOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Global validation pipe
@@ -53,7 +71,8 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  console.log(`🚀 Gateway is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation: http://localhost:${port}/api`);
+  logger.log(`🚀 Gateway is running on: http://localhost:${port}`, 'Bootstrap');
+  logger.log(`📚 Swagger documentation: http://localhost:${port}/api`, 'Bootstrap');
+  logger.log(`🏥 Health checks: http://localhost:${port}/health`, 'Bootstrap');
 }
 bootstrap();

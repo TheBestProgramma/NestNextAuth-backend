@@ -6,10 +6,17 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
-    "format": "prettier --write \"apps/**/*.ts\" \"common/**/*.ts\" \"core/**/*.ts\"",
+    "build": "nest build gateway",
+    "build:gateway": "nest build gateway",
+    "build:auth": "nest build authentication",
+    "build:all": "nest build gateway && nest build authentication",
+    "start": "node dist/apps/gateway/main",
+    "start:gateway": "node dist/apps/gateway/main",
+    "start:auth": "node dist/apps/authentication/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
+    "start:prod": "NODE_ENV=production node dist/apps/gateway/main",
+    "format": "prettier --write \"apps/**/*.ts\" \"common/**/*.ts\" \"core/**/*.ts\"",
     "lint": "eslint \"{apps,common,core}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -79,6 +86,9 @@
     "testEnvironment": "node",
     "roots": [
       "<rootDir>/apps/"
-    ]
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1"
+    }
   }
 }
